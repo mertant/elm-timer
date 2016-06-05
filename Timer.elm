@@ -1,3 +1,4 @@
+
 import Html exposing (Html, div, h1, text, button)
 import Html.Attributes exposing (style)
 import Html.App as Html
@@ -37,6 +38,7 @@ duration intervalType =
     Tomato -> 25*60
     ShortBreak -> 5--*60
     LongBreak -> 15*60
+
 
 
 
@@ -94,6 +96,7 @@ formatTime seconds =
     ss = (if (secondRem < 10) then "0" else "") ++ toString secondRem
   in
   mm ++ ":" ++ ss
+
 
 
 
