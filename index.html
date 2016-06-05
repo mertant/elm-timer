@@ -7636,31 +7636,62 @@ var _elm_lang$html$Html_Events$Options = F2(
 	function (a, b) {
 		return {stopPropagation: a, preventDefault: b};
 	});
-var _user$project$Main$timerStyle = _elm_lang$html$Html_Attributes$style(
-	_elm_lang$core$Native_List.fromArray(
-		[
-			{ctor: '_Tuple2', _0: 'font-size', _1: '8rem'},
-			{ctor: '_Tuple2', _0: 'font-family', _1: 'sans-serif'}
-		]));
-var _user$project$Main$buttonStyle = _elm_lang$html$Html_Attributes$style(
-	_elm_lang$core$Native_List.fromArray(
-		[
-			{ctor: '_Tuple2', _0: 'flex', _1: '1'},
-			{ctor: '_Tuple2', _0: 'font-size', _1: '2rem'}
-		]));
 var _user$project$Main$flexRow = _elm_lang$html$Html_Attributes$style(
 	_elm_lang$core$Native_List.fromArray(
 		[
 			{ctor: '_Tuple2', _0: 'flex-direction', _1: 'row'},
 			{ctor: '_Tuple2', _0: 'display', _1: 'flex'}
 		]));
-var _user$project$Main$buttonView = F2(
-	function (event, string) {
+var _user$project$Main$mainStyle = _elm_lang$html$Html_Attributes$style(
+	_elm_lang$core$Native_List.fromArray(
+		[
+			{ctor: '_Tuple2', _0: 'text-align', _1: 'center'},
+			{ctor: '_Tuple2', _0: 'margin', _1: '5rem'},
+			{ctor: '_Tuple2', _0: 'max-width', _1: '40rem'},
+			{ctor: '_Tuple2', _0: 'font-family', _1: 'sans-serif'}
+		]));
+var _user$project$Main$orangeish = '#ff6c11';
+var _user$project$Main$titleStyle = _elm_lang$html$Html_Attributes$style(
+	_elm_lang$core$Native_List.fromArray(
+		[
+			{ctor: '_Tuple2', _0: 'font-size', _1: '5rem'},
+			{ctor: '_Tuple2', _0: 'color', _1: _user$project$Main$orangeish}
+		]));
+var _user$project$Main$dark = '#001330';
+var _user$project$Main$light = '#1598b2';
+var _user$project$Main$buttonStyle = function (isSelected) {
+	return _elm_lang$html$Html_Attributes$style(
+		_elm_lang$core$Native_List.fromArray(
+			[
+				{ctor: '_Tuple2', _0: 'flex', _1: '1'},
+				{ctor: '_Tuple2', _0: 'font-size', _1: '2rem'},
+				{ctor: '_Tuple2', _0: 'color', _1: 'white'},
+				{
+				ctor: '_Tuple2',
+				_0: 'background-color',
+				_1: isSelected ? _user$project$Main$light : _user$project$Main$dark
+			}
+			]));
+};
+var _user$project$Main$timerStyle = function (stopped) {
+	return _elm_lang$html$Html_Attributes$style(
+		_elm_lang$core$Native_List.fromArray(
+			[
+				{ctor: '_Tuple2', _0: 'font-size', _1: '8rem'},
+				{
+				ctor: '_Tuple2',
+				_0: 'color',
+				_1: stopped ? _user$project$Main$orangeish : _user$project$Main$light
+			}
+			]));
+};
+var _user$project$Main$buttonView = F3(
+	function (event, isSelected, string) {
 		return A2(
 			_elm_lang$html$Html$button,
 			_elm_lang$core$Native_List.fromArray(
 				[
-					_user$project$Main$buttonStyle,
+					_user$project$Main$buttonStyle(isSelected),
 					_elm_lang$html$Html_Events$onClick(event)
 				]),
 			_elm_lang$core$Native_List.fromArray(
@@ -7668,6 +7699,7 @@ var _user$project$Main$buttonView = F2(
 					_elm_lang$html$Html$text(string)
 				]));
 	});
+var _user$project$Main$title = 'Task Timer';
 var _user$project$Main$formatTime = function (seconds) {
 	var secondRem = A2(
 		_elm_lang$core$Basics_ops['%'],
@@ -7691,7 +7723,9 @@ var _user$project$Main$timerView = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
 		_elm_lang$core$Native_List.fromArray(
-			[_user$project$Main$timerStyle]),
+			[
+				_user$project$Main$timerStyle(model.stopped)
+			]),
 		_elm_lang$core$Native_List.fromArray(
 			[
 				_elm_lang$html$Html$text(
@@ -7788,25 +7822,16 @@ var _user$project$Main$view = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
 		_elm_lang$core$Native_List.fromArray(
-			[
-				_elm_lang$html$Html_Attributes$style(
-				_elm_lang$core$Native_List.fromArray(
-					[
-						{ctor: '_Tuple2', _0: 'text-align', _1: 'center'},
-						{ctor: '_Tuple2', _0: 'margin', _1: '5rem'},
-						{ctor: '_Tuple2', _0: 'max-width', _1: '40rem'}
-					]))
-			]),
+			[_user$project$Main$mainStyle]),
 		_elm_lang$core$Native_List.fromArray(
 			[
 				A2(
 				_elm_lang$html$Html$h1,
 				_elm_lang$core$Native_List.fromArray(
-					[]),
+					[_user$project$Main$titleStyle]),
 				_elm_lang$core$Native_List.fromArray(
 					[
-						_elm_lang$html$Html$text(
-						_elm_lang$core$Basics$toString(model.intervalType))
+						_elm_lang$html$Html$text(_user$project$Main$title)
 					])),
 				A2(
 				_elm_lang$html$Html$div,
@@ -7814,17 +7839,20 @@ var _user$project$Main$view = function (model) {
 					[_user$project$Main$flexRow]),
 				_elm_lang$core$Native_List.fromArray(
 					[
-						A2(
+						A3(
 						_user$project$Main$buttonView,
 						_user$project$Main$Reset(_user$project$Main$Tomato),
+						_elm_lang$core$Native_Utils.eq(model.intervalType, _user$project$Main$Tomato),
 						'Tomato (work)'),
-						A2(
+						A3(
 						_user$project$Main$buttonView,
 						_user$project$Main$Reset(_user$project$Main$ShortBreak),
+						_elm_lang$core$Native_Utils.eq(model.intervalType, _user$project$Main$ShortBreak),
 						'Short break (DEBUG)'),
-						A2(
+						A3(
 						_user$project$Main$buttonView,
 						_user$project$Main$Reset(_user$project$Main$LongBreak),
+						_elm_lang$core$Native_Utils.eq(model.intervalType, _user$project$Main$LongBreak),
 						'Long break')
 					])),
 				_user$project$Main$timerView(model),
@@ -7834,10 +7862,15 @@ var _user$project$Main$view = function (model) {
 					[_user$project$Main$flexRow]),
 				_elm_lang$core$Native_List.fromArray(
 					[
-						A2(_user$project$Main$buttonView, _user$project$Main$ToggleStop, 'Stop/Start'),
-						A2(
+						A3(
+						_user$project$Main$buttonView,
+						_user$project$Main$ToggleStop,
+						model.stopped,
+						model.stopped ? 'Start' : 'Stop'),
+						A3(
 						_user$project$Main$buttonView,
 						_user$project$Main$Reset(model.intervalType),
+						false,
 						'Reset')
 					]))
 			]));
