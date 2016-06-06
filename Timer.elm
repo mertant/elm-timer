@@ -20,9 +20,9 @@ main =
 
 type alias Model =
   { start : Time
-  , intervalType: IntervalType
+  , stage: Stage
   , timer: Time
-  , stopped: Bool
+  , isStopped: Bool
   }
 
 init : (Model, Cmd Msg)
@@ -30,11 +30,14 @@ init =
   (Model 0 Tomato (duration Tomato) True,  Cmd.none)
 
 
-type IntervalType = Tomato | ShortBreak | LongBreak
+type Stage
+  = Tomato
+  | ShortBreak
+  | LongBreak
 
-duration : IntervalType -> Time
-duration intervalType =
-  case intervalType of
+duration : Stage -> Time
+duration stage =
+  case stage of
     Tomato -> 25*60
     ShortBreak -> 5--*60
     LongBreak -> 15*60
@@ -47,55 +50,57 @@ duration intervalType =
 type Msg
   = Tick Time
   | ToggleStop
-  | Reset IntervalType
+  | Reset Stage
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update action model =
   case action of
     Tick newTime ->
       (tick model newTime, Cmd.none)
+
     ToggleStop ->
       (toggleStop model, Cmd.none)
-    Reset intervalType ->
-      (resetTimer model intervalType, Cmd.none)
+
+    Reset stage ->
+      (resetTimer model stage, Cmd.none)
+
 
 tick : Model -> Time -> Model
 tick model newTime =
-  Model
-  (if (model.start == 0) then newTime else model.start)
-  model.intervalType
-  (if (model.stopped) then model.timer else (model.timer - 1))
-  model.stopped
+  let
+    start = (if (model.start == 0) then newTime else model.start)
+    stage = model.stage
+    timer = (if (model.isStopped) then model.timer else (model.timer - 1))
+    isStopped = model.isStopped
+  in
+    Model start stage timer isStopped
 
 toggleStop: Model -> Model
 toggleStop model =
   { model
-  | stopped = not model.stopped
+  | isStopped = not model.isStopped
   }
 
-resetTimer: Model -> IntervalType -> Model
-resetTimer model intervalType =
+resetTimer: Model -> Stage -> Model
+resetTimer model stage =
   { model
   | start = 0
-  , stopped = True
-  , intervalType = intervalType
-  , timer = (duration intervalType)
+  , isStopped = True
+  , stage = stage
+  , timer = (duration stage)
   }
 
 
-millisToSeconds : Float -> Int
-millisToSeconds millis =
-  floor(millis/1000)
-
-formatTime : Float -> String
+formatTime : Time -> String
 formatTime seconds =
   let
-    minutes = floor (seconds / 60)
+    absSeconds = abs seconds
+    minutes = floor (absSeconds / 60)
     mm = (if (minutes < 10) then "0" else "") ++ toString minutes
-    secondRem = round seconds % 60
+    secondRem = round absSeconds % 60
     ss = (if (secondRem < 10) then "0" else "") ++ toString secondRem
   in
-  mm ++ ":" ++ ss
+    mm ++ ":" ++ ss
 
 
 
@@ -112,34 +117,49 @@ subscriptions model =
 
 view : Model -> Html Msg
 view model =
-  div [ mainStyle ]
-  [ h1 [ titleStyle ] [ text title ]
-  , div [ flexRow ]
-    [ buttonView (Reset Tomato) (model.intervalType == Tomato) "Tomato (work)"--(Reset Tomato) (True) (if (model.intervalType == Tomato) then "TOMATO" else "Tomato (work)" )
-    , buttonView (Reset ShortBreak) (model.intervalType == ShortBreak) "Short break (DEBUG)"
-    , buttonView (Reset LongBreak) (model.intervalType == LongBreak) "Long break"
+  let
+    title =
+      "Task Timer"
+    topButtonRow =
+      div [ flexRow ]
+        [ setIntervaltypeButton model Tomato "Tomato (work)"
+        , setIntervaltypeButton model ShortBreak "Short break (DEBUG)"
+        , setIntervaltypeButton model LongBreak "Long break"
+        ]
+    bottomButtonRow =
+      div [ flexRow ]
+        [ buttonView (model.isStopped) ToggleStop (if model.isStopped then "Start" else "Stop")
+        , buttonView False (Reset model.stage) "Reset"
+        ]
+  in
+    div [ mainStyle ]
+    [ h1 [ titleStyle ] [ text title ]
+    , topButtonRow
+    , (timerView model)
+    , bottomButtonRow
     ]
-  , (timerView model)
-  , div [ flexRow ]
-    [ buttonView ToggleStop (model.stopped) (if model.stopped then "Start" else "Stop")
-    , buttonView (Reset model.intervalType) False "Reset"
-    ]
-  ]
 
-title: String
-title = "Task Timer"
 
-buttonView : Msg -> Bool -> String -> Html Msg
-buttonView event isSelected string =
+setIntervaltypeButton : Model -> Stage -> String -> Html Msg
+setIntervaltypeButton model stage string =
+  let
+    isSelected = (stage == model.stage)
+    event = (Reset stage)
+  in
+    button [ buttonStyle isSelected, onClick event ] [ text string ]
+
+buttonView : Bool -> Msg -> String -> Html Msg
+buttonView isSelected event string =
   button [ buttonStyle isSelected, onClick event ] [ text string ]
 
 timerView : Model -> Html Msg
 timerView model =
-  div [ timerStyle model.stopped ] [ text  ( formatTime model.timer) ]
+  div [ timerStyle model.isStopped ] [ text  ( formatTime model.timer) ]
 
 
 
 -- STYLES --
+
 light: String
 light = "#1598b2"
 dark: String
@@ -158,7 +178,6 @@ mainStyle =
 titleStyle: Html.Attribute a
 titleStyle =
    style [ ("font-size", "5rem")
-
          , ("color", orangeish)
          ]
 
@@ -175,7 +194,7 @@ buttonStyle isSelected =
         , ("background-color", (if (isSelected) then light else dark)) ]
 
 timerStyle : Bool -> Html.Attribute a
-timerStyle stopped =
-  style [ ("font-size", "8rem")
-        , ("color", if (stopped) then orangeish else light)
-        ]
+timerStyle isStopped = style
+      [ ("font-size", "8rem")
+      , ("color", if (isStopped) then orangeish else light)
+      ]
