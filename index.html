@@ -7762,7 +7762,7 @@ var _user$project$Main$duration = function (stage) {
 		case 'Tomato':
 			return 25 * 60;
 		case 'ShortBreak':
-			return 5;
+			return 5 * 60;
 		default:
 			return 15 * 60;
 	}
@@ -7886,7 +7886,7 @@ var _user$project$Main$view = function (model) {
 		_elm_lang$core$Native_List.fromArray(
 			[
 				A3(_user$project$Main$setIntervalTypeButton, model, _user$project$Main$Tomato, 'Tomato (work)'),
-				A3(_user$project$Main$setIntervalTypeButton, model, _user$project$Main$ShortBreak, 'Short break (DEBUG)'),
+				A3(_user$project$Main$setIntervalTypeButton, model, _user$project$Main$ShortBreak, 'Short break'),
 				A3(_user$project$Main$setIntervalTypeButton, model, _user$project$Main$LongBreak, 'Long break')
 			]));
 	var title = 'Task Timer';
