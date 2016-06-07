@@ -40,7 +40,7 @@ duration : Stage -> Time
 duration stage =
   case stage of
     Tomato -> 25*60
-    ShortBreak -> 5--*60
+    ShortBreak -> 5*60
     LongBreak -> 15*60
 
 
@@ -127,7 +127,7 @@ view model =
     topButtonRow =
       div [ flexRow ]
         [ setIntervalTypeButton model Tomato "Tomato (work)"
-        , setIntervalTypeButton model ShortBreak "Short break (DEBUG)"
+        , setIntervalTypeButton model ShortBreak "Short break"
         , setIntervalTypeButton model LongBreak "Long break"
         ]
     bottomButtonRow =
