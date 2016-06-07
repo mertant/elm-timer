@@ -7673,7 +7673,7 @@ var _user$project$Main$buttonStyle = function (isSelected) {
 			}
 			]));
 };
-var _user$project$Main$timerStyle = function (stopped) {
+var _user$project$Main$timerStyle = function (isStopped) {
 	return _elm_lang$html$Html_Attributes$style(
 		_elm_lang$core$Native_List.fromArray(
 			[
@@ -7681,12 +7681,28 @@ var _user$project$Main$timerStyle = function (stopped) {
 				{
 				ctor: '_Tuple2',
 				_0: 'color',
-				_1: stopped ? _user$project$Main$orangeish : _user$project$Main$light
+				_1: isStopped ? _user$project$Main$orangeish : _user$project$Main$light
+			}
+			]));
+};
+var _user$project$Main$alarmStyle = function (isActive) {
+	return _elm_lang$html$Html_Attributes$style(
+		_elm_lang$core$Native_List.fromArray(
+			[
+				{
+				ctor: '_Tuple2',
+				_0: 'font-size',
+				_1: isActive ? '6rem' : '2rem'
+			},
+				{
+				ctor: '_Tuple2',
+				_0: 'color',
+				_1: isActive ? _user$project$Main$orangeish : _user$project$Main$light
 			}
 			]));
 };
 var _user$project$Main$buttonView = F3(
-	function (event, isSelected, string) {
+	function (isSelected, event, string) {
 		return A2(
 			_elm_lang$html$Html$button,
 			_elm_lang$core$Native_List.fromArray(
@@ -7699,21 +7715,21 @@ var _user$project$Main$buttonView = F3(
 					_elm_lang$html$Html$text(string)
 				]));
 	});
-var _user$project$Main$title = 'Task Timer';
 var _user$project$Main$formatTime = function (seconds) {
+	var absSeconds = _elm_lang$core$Basics$abs(seconds);
+	var minutes = _elm_lang$core$Basics$floor(absSeconds / 60);
+	var mm = A2(
+		_elm_lang$core$Basics_ops['++'],
+		(_elm_lang$core$Native_Utils.cmp(minutes, 10) < 0) ? '0' : '',
+		_elm_lang$core$Basics$toString(minutes));
 	var secondRem = A2(
 		_elm_lang$core$Basics_ops['%'],
-		_elm_lang$core$Basics$round(seconds),
+		_elm_lang$core$Basics$round(absSeconds),
 		60);
 	var ss = A2(
 		_elm_lang$core$Basics_ops['++'],
 		(_elm_lang$core$Native_Utils.cmp(secondRem, 10) < 0) ? '0' : '',
 		_elm_lang$core$Basics$toString(secondRem));
-	var minutes = _elm_lang$core$Basics$floor(seconds / 60);
-	var mm = A2(
-		_elm_lang$core$Basics_ops['++'],
-		(_elm_lang$core$Native_Utils.cmp(minutes, 10) < 0) ? '0' : '',
-		_elm_lang$core$Basics$toString(minutes));
 	return A2(
 		_elm_lang$core$Basics_ops['++'],
 		mm,
@@ -7724,7 +7740,7 @@ var _user$project$Main$timerView = function (model) {
 		_elm_lang$html$Html$div,
 		_elm_lang$core$Native_List.fromArray(
 			[
-				_user$project$Main$timerStyle(model.stopped)
+				_user$project$Main$timerStyle(model.isStopped)
 			]),
 		_elm_lang$core$Native_List.fromArray(
 			[
@@ -7732,18 +7748,16 @@ var _user$project$Main$timerView = function (model) {
 				_user$project$Main$formatTime(model.timer))
 			]));
 };
-var _user$project$Main$millisToSeconds = function (millis) {
-	return _elm_lang$core$Basics$floor(millis / 1000);
-};
 var _user$project$Main$toggleStop = function (model) {
 	return _elm_lang$core$Native_Utils.update(
 		model,
 		{
-			stopped: _elm_lang$core$Basics$not(model.stopped)
+			isStopped: _elm_lang$core$Basics$not(model.isStopped),
+			timerReachedEnd: false
 		});
 };
-var _user$project$Main$duration = function (intervalType) {
-	var _p0 = intervalType;
+var _user$project$Main$duration = function (stage) {
+	var _p0 = stage;
 	switch (_p0.ctor) {
 		case 'Tomato':
 			return 25 * 60;
@@ -7754,28 +7768,29 @@ var _user$project$Main$duration = function (intervalType) {
 	}
 };
 var _user$project$Main$resetTimer = F2(
-	function (model, intervalType) {
+	function (model, stage) {
 		return _elm_lang$core$Native_Utils.update(
 			model,
 			{
 				start: 0,
-				stopped: true,
-				intervalType: intervalType,
-				timer: _user$project$Main$duration(intervalType)
+				isStopped: true,
+				stage: stage,
+				timer: _user$project$Main$duration(stage),
+				timerReachedEnd: false
 			});
 	});
-var _user$project$Main$Model = F4(
-	function (a, b, c, d) {
-		return {start: a, intervalType: b, timer: c, stopped: d};
+var _user$project$Main$Model = F5(
+	function (a, b, c, d, e) {
+		return {start: a, stage: b, timer: c, isStopped: d, timerReachedEnd: e};
 	});
 var _user$project$Main$tick = F2(
 	function (model, newTime) {
-		return A4(
-			_user$project$Main$Model,
-			_elm_lang$core$Native_Utils.eq(model.start, 0) ? newTime : model.start,
-			model.intervalType,
-			model.stopped ? model.timer : (model.timer - 1),
-			model.stopped);
+		var isStopped = model.isStopped || (_elm_lang$core$Native_Utils.cmp(timer, 0) < 1);
+		var timer = (isStopped || (_elm_lang$core$Native_Utils.cmp(model.timer, 0) < 1)) ? model.timer : (model.timer - 1);
+		var timerReachedEnd = _elm_lang$core$Basics$not(model.isStopped) && (_elm_lang$core$Native_Utils.cmp(timer, 0) < 1);
+		var stage = model.stage;
+		var start = _elm_lang$core$Native_Utils.eq(model.start, 0) ? newTime : model.start;
+		return A5(_user$project$Main$Model, start, stage, timer, isStopped, timerReachedEnd);
 	});
 var _user$project$Main$update = F2(
 	function (action, model) {
@@ -7806,19 +7821,75 @@ var _user$project$Main$ShortBreak = {ctor: 'ShortBreak'};
 var _user$project$Main$Tomato = {ctor: 'Tomato'};
 var _user$project$Main$init = {
 	ctor: '_Tuple2',
-	_0: A4(
+	_0: A5(
 		_user$project$Main$Model,
 		0,
 		_user$project$Main$Tomato,
 		_user$project$Main$duration(_user$project$Main$Tomato),
-		true),
+		true,
+		false),
 	_1: _elm_lang$core$Platform_Cmd$none
 };
 var _user$project$Main$Reset = function (a) {
 	return {ctor: 'Reset', _0: a};
 };
+var _user$project$Main$setIntervalTypeButton = F3(
+	function (model, stage, string) {
+		var event = _user$project$Main$Reset(stage);
+		var isSelected = _elm_lang$core$Native_Utils.eq(stage, model.stage);
+		return A2(
+			_elm_lang$html$Html$button,
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_user$project$Main$buttonStyle(isSelected),
+					_elm_lang$html$Html_Events$onClick(event)
+				]),
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$html$Html$text(string)
+				]));
+	});
 var _user$project$Main$ToggleStop = {ctor: 'ToggleStop'};
 var _user$project$Main$view = function (model) {
+	var alarmRow = A2(
+		_elm_lang$html$Html$div,
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_user$project$Main$alarmStyle(model.timerReachedEnd)
+			]),
+		_elm_lang$core$Native_List.fromArray(
+			[
+				_elm_lang$html$Html$text(
+				model.timerReachedEnd ? 'BEEP BEEP BEEP BEEP BEEP BEEP (press any button to stop alarm)' : 'Note: there is no audible alarm.')
+			]));
+	var bottomButtonRow = A2(
+		_elm_lang$html$Html$div,
+		_elm_lang$core$Native_List.fromArray(
+			[_user$project$Main$flexRow]),
+		_elm_lang$core$Native_List.fromArray(
+			[
+				A3(
+				_user$project$Main$buttonView,
+				model.isStopped,
+				_user$project$Main$ToggleStop,
+				model.isStopped ? 'Start' : 'Stop'),
+				A3(
+				_user$project$Main$buttonView,
+				false,
+				_user$project$Main$Reset(model.stage),
+				'Reset')
+			]));
+	var topButtonRow = A2(
+		_elm_lang$html$Html$div,
+		_elm_lang$core$Native_List.fromArray(
+			[_user$project$Main$flexRow]),
+		_elm_lang$core$Native_List.fromArray(
+			[
+				A3(_user$project$Main$setIntervalTypeButton, model, _user$project$Main$Tomato, 'Tomato (work)'),
+				A3(_user$project$Main$setIntervalTypeButton, model, _user$project$Main$ShortBreak, 'Short break (DEBUG)'),
+				A3(_user$project$Main$setIntervalTypeButton, model, _user$project$Main$LongBreak, 'Long break')
+			]));
+	var title = 'Task Timer';
 	return A2(
 		_elm_lang$html$Html$div,
 		_elm_lang$core$Native_List.fromArray(
@@ -7831,48 +7902,12 @@ var _user$project$Main$view = function (model) {
 					[_user$project$Main$titleStyle]),
 				_elm_lang$core$Native_List.fromArray(
 					[
-						_elm_lang$html$Html$text(_user$project$Main$title)
+						_elm_lang$html$Html$text(title)
 					])),
-				A2(
-				_elm_lang$html$Html$div,
-				_elm_lang$core$Native_List.fromArray(
-					[_user$project$Main$flexRow]),
-				_elm_lang$core$Native_List.fromArray(
-					[
-						A3(
-						_user$project$Main$buttonView,
-						_user$project$Main$Reset(_user$project$Main$Tomato),
-						_elm_lang$core$Native_Utils.eq(model.intervalType, _user$project$Main$Tomato),
-						'Tomato (work)'),
-						A3(
-						_user$project$Main$buttonView,
-						_user$project$Main$Reset(_user$project$Main$ShortBreak),
-						_elm_lang$core$Native_Utils.eq(model.intervalType, _user$project$Main$ShortBreak),
-						'Short break (DEBUG)'),
-						A3(
-						_user$project$Main$buttonView,
-						_user$project$Main$Reset(_user$project$Main$LongBreak),
-						_elm_lang$core$Native_Utils.eq(model.intervalType, _user$project$Main$LongBreak),
-						'Long break')
-					])),
+				topButtonRow,
 				_user$project$Main$timerView(model),
-				A2(
-				_elm_lang$html$Html$div,
-				_elm_lang$core$Native_List.fromArray(
-					[_user$project$Main$flexRow]),
-				_elm_lang$core$Native_List.fromArray(
-					[
-						A3(
-						_user$project$Main$buttonView,
-						_user$project$Main$ToggleStop,
-						model.stopped,
-						model.stopped ? 'Start' : 'Stop'),
-						A3(
-						_user$project$Main$buttonView,
-						_user$project$Main$Reset(model.intervalType),
-						false,
-						'Reset')
-					]))
+				bottomButtonRow,
+				alarmRow
 			]));
 };
 var _user$project$Main$Tick = function (a) {
