@@ -23,11 +23,12 @@ type alias Model =
   , stage: Stage
   , timer: Time
   , isStopped: Bool
+  , timerReachedEnd: Bool
   }
 
 init : (Model, Cmd Msg)
 init =
-  (Model 0 Tomato (duration Tomato) True,  Cmd.none)
+  (Model 0 Tomato (duration Tomato) True False,  Cmd.none)
 
 
 type Stage
@@ -68,17 +69,19 @@ update action model =
 tick : Model -> Time -> Model
 tick model newTime =
   let
-    start = (if (model.start == 0) then newTime else model.start)
+    start = if (model.start == 0) then newTime else model.start
     stage = model.stage
-    timer = (if (model.isStopped) then model.timer else (model.timer - 1))
-    isStopped = model.isStopped
+    isStopped = model.isStopped || timer <= 0
+    timer = if (isStopped || model.timer <= 0) then model.timer else (model.timer - 1)
+    timerReachedEnd = (not model.isStopped && timer <= 0)
   in
-    Model start stage timer isStopped
+    Model start stage timer isStopped timerReachedEnd
 
 toggleStop: Model -> Model
 toggleStop model =
   { model
   | isStopped = not model.isStopped
+  , timerReachedEnd = False
   }
 
 resetTimer: Model -> Stage -> Model
@@ -88,6 +91,7 @@ resetTimer model stage =
   , isStopped = True
   , stage = stage
   , timer = (duration stage)
+  , timerReachedEnd = False
   }
 
 
@@ -122,26 +126,33 @@ view model =
       "Task Timer"
     topButtonRow =
       div [ flexRow ]
-        [ setIntervaltypeButton model Tomato "Tomato (work)"
-        , setIntervaltypeButton model ShortBreak "Short break (DEBUG)"
-        , setIntervaltypeButton model LongBreak "Long break"
+        [ setIntervalTypeButton model Tomato "Tomato (work)"
+        , setIntervalTypeButton model ShortBreak "Short break (DEBUG)"
+        , setIntervalTypeButton model LongBreak "Long break"
         ]
     bottomButtonRow =
       div [ flexRow ]
         [ buttonView (model.isStopped) ToggleStop (if model.isStopped then "Start" else "Stop")
         , buttonView False (Reset model.stage) "Reset"
         ]
+    alarmRow =
+      div [ alarmStyle model.timerReachedEnd ]
+      [ text (if (model.timerReachedEnd)
+        then "BEEP BEEP BEEP BEEP BEEP BEEP (press any button to stop alarm)"
+        else "Note: there is no audible alarm.")
+      ]
   in
     div [ mainStyle ]
     [ h1 [ titleStyle ] [ text title ]
     , topButtonRow
     , (timerView model)
     , bottomButtonRow
+    , alarmRow
     ]
 
 
-setIntervaltypeButton : Model -> Stage -> String -> Html Msg
-setIntervaltypeButton model stage string =
+setIntervalTypeButton : Model -> Stage -> String -> Html Msg
+setIntervalTypeButton model stage string =
   let
     isSelected = (stage == model.stage)
     event = (Reset stage)
@@ -198,3 +209,9 @@ timerStyle isStopped = style
       [ ("font-size", "8rem")
       , ("color", if (isStopped) then orangeish else light)
       ]
+
+alarmStyle : Bool -> Html.Attribute a
+alarmStyle isActive = style
+  [ ("font-size", (if isActive then "6rem" else "2rem"))
+  , ("color", if (isActive) then orangeish else light)
+  ]
